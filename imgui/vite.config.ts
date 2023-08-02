@@ -1,9 +1,7 @@
 import { defineConfig } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
+import Inspect from "vite-plugin-inspect";
+import plugin from "./plugin";
 
 export default defineConfig({
-  plugins: [
-    // bundle everything into a single `index.html`
-    // viteSingleFile(),
-  ],
+  plugins: [Inspect(), plugin()],
 });

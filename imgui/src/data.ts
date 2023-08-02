@@ -1,3 +1,5 @@
+import { MElement } from "./dom";
+
 export const PDSymbol = Symbol("PD");
 
 export class PD<T> {
@@ -8,8 +10,8 @@ export class PD<T> {
   }
 }
 
-export function d<T>(v: T): PD<T> {
-  return new PD(v);
+export function d<T>(v: T): Readonly<T> & PD<T> {
+  return new PD(v) as any as Readonly<T> & PD<T>;
 }
 
 export type D<T> = T | PD<T>;
@@ -24,4 +26,19 @@ export function setD<T>(d: D<T>, v: T): boolean {
     return true;
   }
   return false;
+}
+
+export function toRaw<T extends object>(d: D<T>): T {
+  for (const key in d) {
+    d[key] = getD(d[key]);
+  }
+  return d as T;
+}
+
+export interface Ref<E extends MElement = MElement> {
+  current: E | null;
+}
+
+export function ref<E extends MElement>(current: E | null = null): Ref<E> {
+  return { current };
 }

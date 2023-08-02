@@ -1,0 +1,11 @@
+{
+  "jsc": {
+    "target": "esnext",
+    "parser": {
+      "syntax": "typescript"
+    },
+    "experimental": {
+      "plugins": [["web-imgui-plugin", {}]]
+    }
+  }
+}

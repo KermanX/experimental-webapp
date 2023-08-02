@@ -1,11 +1,13 @@
 {
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "compilerOptions": {
     "outDir": "dist",
-    "target": "ES2019",
+    "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ES2019", "DOM"]
+    "lib": ["ESNext", "DOM"],
+    "noImplicitThis": true,
+    "plugins": [{
+      "name": "tsserver-plugin"
+    }],
   }
 }

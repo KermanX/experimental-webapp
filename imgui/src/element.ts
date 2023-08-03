@@ -1,15 +1,14 @@
 import { D, Ref } from "./data.js";
-import { ExtraInfo, writeExtraInfoToDOM } from "./extraInfo.js";
 import { View } from "./view.js";
 
 export const ___ = "[LOADING]";
 
 export abstract class MElement<E extends HTMLElement = HTMLElement> {
-  extraInfo: ExtraInfo;
   el: E;
   constructor(
     public view: View,
-    public id: string
+    public id: string,
+    public metadata: Metadata
   ) {
     console.log("Ctor", id, this.constructor.name);
   }
@@ -20,14 +19,18 @@ export abstract class MElement<E extends HTMLElement = HTMLElement> {
     return this.view.setD(d, v);
   }
 
-  writeExtraInfoToDOM() {
-    writeExtraInfoToDOM(this.el, this.extraInfo);
+  writeMetadataToDOM() {
+    if (this.metadata.id) this.el.id = this.metadata.id;
+    if (this.metadata.classes && this.metadata.classes!.length > 0)
+      this.el.classList.add(...this.metadata.classes);
+    if (this.metadata.style) this.el.style.cssText = this.metadata.style;
   }
 }
 
 export type MElementCtor<E extends MElement = MElement> = new (
   view: View,
-  id: string
+  id: string,
+  metadata: Metadata
 ) => E;
 
 export abstract class MElementWithChildren<
@@ -39,7 +42,7 @@ export abstract class MElementWithChildren<
   createChildrenDOM() {
     for (const child of this.children) {
       child.createDOM();
-      child.writeExtraInfoToDOM();
+      child.writeMetadataToDOM();
       this.el.appendChild(child.el);
       this.createdChildren[child.id] = child.el;
     }
@@ -57,7 +60,7 @@ export abstract class MElementWithChildren<
         delete createdUnused[child.id];
       } else {
         child.createDOM();
-        child.writeExtraInfoToDOM();
+        child.writeMetadataToDOM();
         if (lastChildEl) {
           lastChildEl.after(child.el);
         } else {
@@ -80,9 +83,9 @@ export abstract class MElementWithChildren<
 }
 
 export type Metadata = {
-  id: string | null;
-  classes: string[];
-  style: string | null;
+  id?: string | null;
+  classes?: string[];
+  style?: string | null;
   ref?: Ref<any> | null;
 } | null;
 
@@ -94,7 +97,7 @@ export interface ElementFuncs extends Record<string, [object, any[]]> {}
 
 export interface ElementCustomFuncs {}
 
-const a : number |string = 1;
+const a: number | string = 1;
 
 export type Elements = ElementCustomFuncs & {
   [K in keyof ElementFuncs]: <Metadata extends string = "">(

@@ -8,7 +8,6 @@ import {
   elements,
   MElementCtor,
 } from "./element.js";
-import { generateExtraInfoFromSelector } from "./extraInfo.js";
 // import { ExtraInfo } from "./extraInfo.js";
 
 export type Context = Elements;
@@ -26,7 +25,7 @@ export class View {
     Object.entries(elements).forEach(([name, func]) => {
       (this._ as any).$[name] = func.bind(this);
     });
-    this.root = new RootElement(this, rootElementId);
+    this.root = new RootElement(this, rootElementId, {});
   }
 
   status = new RenderingStatus(this);
@@ -61,13 +60,6 @@ export class View {
     return ret;
   }
 
-  // setExtraInfo(info: ExtraInfo) {
-  //   this.extraInfo = info;
-  // }
-  protected initChild(e: MElement, metadata: Metadata) {
-    e.extraInfo = generateExtraInfoFromSelector(metadata);
-    this.map.set(e.id, e);
-  }
 
   protected getOrCreate<E extends MElement>(
     id: string,
@@ -77,8 +69,8 @@ export class View {
     id = this.status.getFullId(id);
     let e = this.map.get(id) as E;
     if (!e) {
-      e = new elc(this, id);
-      this.initChild(e, metadata);
+      e = new elc(this, id, metadata);
+      this.map.set(e.id, e);
     }
     if (metadata.ref) {
       metadata.ref.current = e;

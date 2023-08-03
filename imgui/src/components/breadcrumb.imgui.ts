@@ -1,5 +1,4 @@
-import { D, MElement, Metadata, getD, registerElement } from "../lib";
-import { byIndex, bySelf } from "../loop";
+import { D, Metadata, byIndex, getD, registerElement } from "../lib";
 
 export type BreadCrumbItem = string;
 
@@ -18,7 +17,8 @@ registerElement(function breadcrumb(
   items: D<BreadCrumbItem[]>
 ) {
   let itemsValue = getD(items);
-  return this._.ul(() => {
+  this.status.beginChild(id);
+  this._.ul<"$metadata">(() => {
     this._.for(itemsValue.slice(0, -1), byIndex, (item) => {
       this._.li<"{display:inline;list-style:none;}">(() => {
         this._.span(item);
@@ -29,4 +29,6 @@ registerElement(function breadcrumb(
       this._.span(itemsValue.at(-1));
     });
   });
+  this.status.endChild();
+  return false;
 });

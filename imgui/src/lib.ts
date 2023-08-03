@@ -11,3 +11,4 @@ export {
 export * from "./element.js";
 export { view } from "./view.js";
 import "./components/dom.imgui.js";
+export * from "./loop.js";

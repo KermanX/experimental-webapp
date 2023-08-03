@@ -1,4 +1,5 @@
 import { RootElement } from "./components/dom.imgui.js";
+import { D, dangerously_setD } from "./data.js";
 import {
   MElement,
   MElementWithChildren,
@@ -32,6 +33,7 @@ export class View {
   _ = {} as Context;
   map: Map<string, MElement> = new Map();
   root: RootElement;
+
   mount() {
     if (!viewsSymbolMap.has(this.main)) {
       viewsSymbolMap.set(this.main, Symbol(this.main.toString()));
@@ -53,6 +55,11 @@ export class View {
     this.recv(receiver, data);
     this.update();
   }
+  setD<T>(d: D<T>, v: T): boolean {
+    const ret = dangerously_setD(d, v);
+    this.update();
+    return ret;
+  }
 
   // setExtraInfo(info: ExtraInfo) {
   //   this.extraInfo = info;
@@ -67,7 +74,7 @@ export class View {
     metadata: Metadata,
     elc: MElementCtor<E>
   ) {
-    id = this.status.idPrefix.join(".") + "." + id;
+    id = this.status.getFullId(id);
     let e = this.map.get(id) as E;
     if (!e) {
       e = new elc(this, id);
@@ -91,7 +98,7 @@ export class View {
     metadata: Metadata,
     elc: MElementCtor<E>,
     props: Partial<E>
-  ): void {
+  ): boolean {
     const e = this.getOrCreate(id, metadata, elc);
     switch (this.status.currentState) {
       case State.update:
@@ -101,6 +108,7 @@ export class View {
       case State.recv:
         break;
     }
+    return this.status.receiver === e.id;
   }
 
   parent<E extends MElementWithChildren>(
@@ -109,33 +117,28 @@ export class View {
     elc: MElementCtor<E>,
     inner: ViewRender,
     props: Partial<E>
-  ): void {
+  ): boolean {
     const e = this.getOrCreate(id, metadata, elc);
     const oldParent = this.status.currrentParent;
     switch (this.status.currentState) {
       case State.update:
         this.writeProps(e, props);
         this.status.currrentParent.children.push(e);
-
-        // const oldChildren = e.children.map((c) => c.id);
-
         e.children = [];
         this.status.currrentParent = e;
+        this.status.beginChild(id);
         inner(this._);
-        // for(const child of e.children){
-        //   if(!oldChildren.includes(child.id)){
-
-        //   }
-        // }
-
-        // inner();
+        this.status.endChild();
         break;
       case State.recv:
         this.status.currrentParent = this.map.get(id) as MElementWithChildren;
+        this.status.beginChild(id);
         inner(this._);
+        this.status.endChild();
         break;
     }
     this.status.currrentParent = oldParent;
+    return this.status.receiver === e.id;
   }
 }
 
@@ -150,7 +153,8 @@ export class RenderingStatus {
   currrentParent: MElementWithChildren;
   currentState: State;
   receiver: string | null;
-  idPrefix: string[];
+  // receiverElementFunc: (keyof Elements) | null = null; // Always null. Just a type hint.
+  protected idPrefix: string[];
   // extraInfo: ExtraInfo;
 
   resetAs(state: State, receiver: string | null = null) {
@@ -159,6 +163,17 @@ export class RenderingStatus {
     this.receiver = receiver;
     this.idPrefix = ["root"];
     // this.extraInfo = { style: {} };
+  }
+
+  beginChild(parentId: string, index: string | number | null = null) {
+    this.idPrefix.push(parentId + (index === null ? "" : `[${index}]`));
+  }
+  endChild() {
+    this.idPrefix.pop();
+  }
+
+  getFullId(id: string) {
+    return this.idPrefix.join(".") + "." + id;
   }
 }
 

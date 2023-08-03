@@ -1,4 +1,4 @@
-import { D, setD, getD } from "../data.js";
+import { D, getD } from "../data.js";
 import {
   MElementWithChildren,
   MElement,
@@ -119,8 +119,7 @@ export class NumberInputElement extends MElement<HTMLLabelElement> {
     this.el.style.display = "block";
     this.inputEl.type = "number";
     this.el.addEventListener("input", (e) => {
-      setD(this.value, +e.target["value"]);
-      this.view.update();
+      this.setD(this.value, +e.target["value"]);
     });
     this.el.appendChild(this.textNode);
     this.el.appendChild(this.inputEl);
@@ -156,8 +155,7 @@ export class TextInputElement extends MElement<HTMLLabelElement> {
     this.el.style.display = "block";
     this.inputEl.type = "text";
     this.inputEl.addEventListener("input", (e) => {
-      setD(this.value, e.target["value"]);
-      this.view.update();
+      this.setD(this.value, e.target["value"]);
     });
     this.el.appendChild(this.textNode);
     this.el.appendChild(this.inputEl);
@@ -213,10 +211,10 @@ export class TableElement extends MElementWithChildren<HTMLTableElement> {
   }
 }
 declare module "../element" {
-  interface ElementGenericFuncs {
+  interface ElementCustomFuncs {
     table<Metadata extends string = "", Item = unknown>(
       data: D<Item[]>,
-      key: string | ((item: Item) => D<string>),
+      key: keyof Item | ((item: Item) => D<string>),
       rowProc: (item: Item) => void
     ): RetValue<boolean, TableElement>;
   }
@@ -226,26 +224,16 @@ registerElement(function table<Item>(
   id: string,
   metadata: Metadata,
   data: D<Item[]>,
-  key: string | ((item: Item) => D<string>),
-  rowProc: (item: Item) => D<string>
+  key: keyof Item | ((item: Item, index: number) => D<string>),
+  rowProc: (item: Item, index: number) => D<string>
 ) {
   return this.parent(
     id,
     metadata,
     TableElement,
     () => {
-      let k: (item: Item) => any;
-      if (typeof key === "string") {
-        k = (item: Item) => getD(item[key as string]);
-      } else {
-        k = key;
-      }
-      getD(data).forEach((item) => {
-        let r = () => rowProc(item);
-        let i = `${id}[${getD(k(item))}]`;
-        this.status.idPrefix.push(i);
-        this._.tr(r);
-        this.status.idPrefix.pop();
+      this._.for(data, key, (item, index) => {
+        this._.tr(() => rowProc(item, index));
       });
     },
     {}
@@ -286,4 +274,62 @@ declare module "../element" {
 }
 registerElement(function td(id: string, metadata: Metadata, inner: ViewRender) {
   return this.parent(id, metadata, TableCellElement, inner, {});
+});
+
+export class UnorderedListElement extends MElementWithChildren<HTMLUListElement> {
+  createDOM() {
+    this.el = document.createElement("ul");
+    this.createChildrenDOM();
+  }
+  updateDOM() {
+    this.updateChildrenDOM();
+  }
+}
+export class ListItemElement extends MElementWithChildren<HTMLLIElement> {
+  createDOM() {
+    this.el = document.createElement("li");
+    this.createChildrenDOM();
+  }
+  updateDOM() {
+    this.updateChildrenDOM();
+  }
+}
+declare module "../element" {
+  interface ElementFuncs {
+    ul: [UnorderedListElement, [inner: ViewRender]];
+    li: [ListItemElement, [inner: ViewRender]];
+  }
+  interface ElementCustomFuncs {
+    ulist<Metadata extends string = "", Item = unknown>(
+      data: D<Item[]>,
+      key: keyof Item | ((item: Item, index: number) => D<string>),
+      rowProc: (item: Item, index: number) => void
+    ): RetValue<boolean, UnorderedListElement>;
+  }
+}
+registerElement(function ul(id: string, metadata: Metadata, inner: ViewRender) {
+  return this.parent(id, metadata, UnorderedListElement, inner, {});
+});
+registerElement(function li(id: string, metadata: Metadata, inner: ViewRender) {
+  return this.parent(id, metadata, ListItemElement, inner, {});
+});
+registerElement(function ulist<Item>(
+  this: View,
+  id: string,
+  metadata: Metadata,
+  data: D<Item[]>,
+  key: keyof Item | ((item: Item, index: number) => D<string>),
+  rowProc: (item: Item, index: number) => D<string>
+) {
+  return this.parent(
+    id,
+    metadata,
+    UnorderedListElement,
+    () => {
+      this._.for(data, key, (item, index) => {
+        this._.li(() => rowProc(item, index));
+      });
+    },
+    {}
+  );
 });

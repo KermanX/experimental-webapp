@@ -1,5 +1,8 @@
 import { ButtonElement } from "./components/dom.imgui.js";
+import "./loop.js";
+import "./components/breadcrumb.imgui.js";
 import { d, ref, view, toRaw } from "./lib.js";
+import { byIndex, bySelf } from "./loop.js";
 
 // let username = d("");
 // let password = d("");
@@ -43,6 +46,7 @@ view((_) => {
   _.textInput("Username: ", name);
   _.numberInput("Age: ", age);
   if (_.button<".primary-btn">("Register").as(btn)) {
+    console.log("Register", name.value, age.value);
     table.push(toRaw({ name, age }));
     name.value = "";
     age.value = 0;
@@ -56,6 +60,24 @@ view((_) => {
       _.t(row.age.toString());
     });
   });
+
+  // _.div(() => {
+  //   _.for(
+  //     table,
+  //     (item) => item.name,
+  //     (item, index) => {
+  //       _.p<"{border:1px black solid;}">(item.name + index);
+  //     }
+  //   );
+  // });
+  // _.forRange(10, (i) => {
+  //   _.p(i.toString());
+  // });
+  // _.for([1, 1, 4, 5, 1, 4], byIndex, (i) => {
+  //   _.p(i.toString());
+  // });
+
+  _.breadcrumb(table.map((item) => item.name));
 });
 
 // `
@@ -63,10 +85,10 @@ view((_) => {
 //          p-5 bg-gray-100 rounded-lg shadow-2xl
 //                      p-5 bg-gray-30 rounded-sm
 
-//           p-5 bg-gray-100 rounded-lg shadow-2xl
+//          p-5 bg-gray-100 rounded-lg shadow-2xl
 
-//                                             red
+//                                            red
 
-//                                           green
+//                                          green
 
 // `

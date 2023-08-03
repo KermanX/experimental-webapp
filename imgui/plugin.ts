@@ -4,7 +4,7 @@ import MagicString from "magic-string";
 export default function myExample() {
   const ctx = { id: 0 };
   return {
-    name: "web-imgui-plugin", // 此名称将出现在警告和错误中
+    name: "web-imgui-plugin",
     enforce: "pre",
     transform(code, id, options) {
       if (!id.endsWith(".imgui.ts")) {

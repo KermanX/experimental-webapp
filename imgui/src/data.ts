@@ -22,7 +22,7 @@ export function getD<T>(d: D<T>): T {
   return d[PDSymbol] ? (d as PD<T>).value : (d as T);
 }
 
-export function setD<T>(d: D<T>, v: T): boolean {
+export function dangerously_setD<T>(d: D<T>, v: T): boolean {
   if (d[PDSymbol]) {
     (d as PD<T>).value = v;
     return true;
@@ -37,10 +37,10 @@ export function toRaw<T extends object>(d: T): T {
   return d as T;
 }
 
-export interface Ref<E extends MElement = MElement> {
-  current: E | null;
+export interface Ref<T extends object> {
+  current: T | null;
 }
 
-export function ref<E extends MElement>(current: E | null = null): Ref<E> {
+export function ref<T extends object>(current: T | null = null): Ref<T> {
   return { current };
 }

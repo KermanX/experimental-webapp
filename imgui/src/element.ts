@@ -1,4 +1,4 @@
-import { Ref } from "./data.js";
+import { D, Ref } from "./data.js";
 import { ExtraInfo, writeExtraInfoToDOM } from "./extraInfo.js";
 import { View } from "./view.js";
 
@@ -15,6 +15,10 @@ export abstract class MElement<E extends HTMLElement = HTMLElement> {
   }
   abstract createDOM(): void;
   abstract updateDOM(): void;
+
+  protected setD<T>(d: D<T>, v: T): boolean {
+    return this.view.setD(d, v);
+  }
 
   writeExtraInfoToDOM() {
     writeExtraInfoToDOM(this.el, this.extraInfo);
@@ -79,18 +83,20 @@ export type Metadata = {
   id: string | null;
   classes: string[];
   style: string | null;
-  ref?: Ref | null;
+  ref?: Ref<any> | null;
 } | null;
 
-export type RetValue<R, E extends MElement> = R & {
-  as(ref: Ref<E>): R;
+export type RetValue<R, T extends object> = R & {
+  as(ref: Ref<T>): R;
 };
 
-export interface ElementFuncs extends Record<string, [MElement, any[]]> {}
+export interface ElementFuncs extends Record<string, [object, any[]]> {}
 
-export interface ElementGenericFuncs {}
+export interface ElementCustomFuncs {}
 
-export type Elements = ElementGenericFuncs & {
+const a : number |string = 1;
+
+export type Elements = ElementCustomFuncs & {
   [K in keyof ElementFuncs]: <Metadata extends string = "">(
     ...args: ElementFuncs[K][1]
   ) => RetValue<boolean, ElementFuncs[K][0]>;
@@ -99,7 +105,8 @@ export type Elements = ElementGenericFuncs & {
 export const elements: Elements = {} as any;
 
 export function registerElement(
-  func: (this: View, id: string, metadata: Metadata, ...args: any[]) => any
+  func: (this: View, id: string, metadata: Metadata, ...args: any[]) => boolean,
+  name = func.name
 ) {
-  elements[func.name] = func;
+  elements[name] = func as any;
 }

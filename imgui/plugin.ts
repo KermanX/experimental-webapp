@@ -12,10 +12,10 @@ export default function myExample() {
       }
       const s = new MagicString(code);
       s.replaceAll(
-        /_\s*\.\s*([a-zA-Z0-9_]+)\s*<\s*\"([\s\S]*?)\"\s*>\s*\(([\s\S]*?)\)(\s*\.as\s*\(([\s\S]+?)\))?/g,
-        (_, name, selector, args, _2, ref = null) => {
+        /_\s*\.\s*([a-zA-Z0-9_]+)\s*<\s*\"([\s\S]*?)\",?([\s\S]*?)>\s*\(([\s\S]*?)\)(\s*\.as\s*\(([\s\S]+?)\))?/g,
+        (_, name, selector,typeargs, args, _2, ref = null) => {
           ctx.id++;
-          return `_.$.${name}(${ctx.id}, ${generateMetadata(
+          return `_.$.${name}${typeargs.length>0?`<${typeargs}>`:""}(${ctx.id}, ${generateMetadata(
             selector,
             ref
           )}, ${args})`;
@@ -90,10 +90,9 @@ function parseSelector(selector: string) {
 
 function generateMetadata(selector: string, ref: string | null) {
   const { id, classes, style } = parseSelector(selector);
-  return `{
-    id:${id ? `"${id}"` : "null"},
-    classes:[${classes.map((c) => `"${c}"`).join(",")}],
-    style:${style ? `"${style}"` : "null"},
-    ref:${ref}
-  }`;
+  return `{${id ? `id:"${id}",` : ""}${
+      classes.length > 0
+        ? `classes:[${classes.map((c) => `"${c}"`).join(",")}],`
+        : ""
+    }${style ? `style:"${style}",` : ""}${ref ? `ref:${ref},` : ""}}`;
 }

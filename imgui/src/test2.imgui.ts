@@ -1,4 +1,5 @@
-import { d, ref, view, ButtonElement, toRaw } from "./lib.js";
+import { ButtonElement } from "./components/dom.imgui.js";
+import { d, ref, view, toRaw } from "./lib.js";
 
 // let username = d("");
 // let password = d("");
@@ -30,32 +31,42 @@ import { d, ref, view, ButtonElement, toRaw } from "./lib.js";
     }`);
   });*/
 
-let name = d("");
-let age = d(0);
-let table = d([
+const name = d("");
+const age = d(0);
+const table = [
   { name: "John", age: 20 },
   { name: "Mary", age: 30 },
   { name: "Bob", age: 40 },
-]);
-let btn = ref<ButtonElement>();
+];
+const btn = ref<ButtonElement>();
 view((_) => {
   _.textInput("Username: ", name);
   _.numberInput("Age: ", age);
   if (_.button<".primary-btn">("Register").as(btn)) {
-    table.value.push(toRaw({ name, age }));
+    table.push(toRaw({ name, age }));
     name.value = "";
     age.value = 0;
   }
   btn.current.disabled = !(name.value.length > 0 && age.value > 0);
-  _.table(table, (row) => [
-    row.name,
-    () => {
-      _.td(() => {
-        _.t(row.name);
-      });
-      _.td(() => {
-        _.t(row.age);
-      });
-    },
-  ]);
+  _.table<"{color:red}", (typeof table)[number]>(table, "name", (row) => {
+    _.td(() => {
+      _.t(row.name);
+    });
+    _.td(() => {
+      _.t(row.age.toString());
+    });
+  });
 });
+
+// `
+// p-10 flex flex-col items-center justify-center
+//          p-5 bg-gray-100 rounded-lg shadow-2xl
+//                      p-5 bg-gray-30 rounded-sm
+
+//           p-5 bg-gray-100 rounded-lg shadow-2xl
+
+//                                             red
+
+//                                           green
+
+// `

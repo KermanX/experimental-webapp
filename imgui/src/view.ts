@@ -1,21 +1,16 @@
+import { RootElement } from "./components/dom.imgui.js";
 import {
   MElement,
   MElementWithChildren,
-  RootElement,
   Metadata,
   Elements,
-  RetValue,
-  elementFuncs,
+  elements,
   MElementCtor,
-} from "./dom.js";
+} from "./element.js";
 import { generateExtraInfoFromSelector } from "./extraInfo.js";
 // import { ExtraInfo } from "./extraInfo.js";
 
-export type Context = {
-  [E in keyof Elements]: <S extends string = "">(
-    ...args: Elements[E][1]
-  ) => RetValue<Elements[E][2], Elements[E][0]>;
-};
+export type Context = Elements;
 
 export type ViewRender = (_: Context) => void;
 
@@ -26,15 +21,15 @@ export class View {
     public main: ViewRender,
     public rootElementId: string
   ) {
-    (this.context as any).$ = {};
-    Object.entries(elementFuncs).forEach(([name, func]) => {
-      (this.context as any).$[name] = func.bind(this);
+    (this._ as any).$ = {};
+    Object.entries(elements).forEach(([name, func]) => {
+      (this._ as any).$[name] = func.bind(this);
     });
     this.root = new RootElement(this, rootElementId);
   }
 
   status = new RenderingStatus(this);
-  context = {} as Context;
+  _ = {} as Context;
   map: Map<string, MElement> = new Map();
   root: RootElement;
   mount() {
@@ -46,11 +41,11 @@ export class View {
   }
   recv(receiver: string, data: any) {
     this.status.resetAs(State.recv, receiver);
-    this.main(this.context);
+    this.main(this._);
   }
   update() {
     this.status.resetAs(State.update);
-    this.main(this.context);
+    this.main(this._);
     this.root.updateDOM();
   }
   fire(receiver: string, data: any) {
@@ -96,7 +91,7 @@ export class View {
     metadata: Metadata,
     elc: MElementCtor<E>,
     props: Partial<E>
-  ) {
+  ): void {
     const e = this.getOrCreate(id, metadata, elc);
     switch (this.status.currentState) {
       case State.update:
@@ -106,7 +101,6 @@ export class View {
       case State.recv:
         break;
     }
-    return e;
   }
 
   parent<E extends MElementWithChildren>(
@@ -115,7 +109,7 @@ export class View {
     elc: MElementCtor<E>,
     inner: ViewRender,
     props: Partial<E>
-  ) {
+  ): void {
     const e = this.getOrCreate(id, metadata, elc);
     const oldParent = this.status.currrentParent;
     switch (this.status.currentState) {
@@ -127,7 +121,7 @@ export class View {
 
         e.children = [];
         this.status.currrentParent = e;
-        inner(this.context);
+        inner(this._);
         // for(const child of e.children){
         //   if(!oldChildren.includes(child.id)){
 
@@ -138,11 +132,10 @@ export class View {
         break;
       case State.recv:
         this.status.currrentParent = this.map.get(id) as MElementWithChildren;
-        inner(this.context);
+        inner(this._);
         break;
     }
     this.status.currrentParent = oldParent;
-    return e;
   }
 }
 

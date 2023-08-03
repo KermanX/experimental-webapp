@@ -8,5 +8,5 @@ export {
   type PD,
   type Ref,
 } from "./data.js";
-export * from "./dom.js";
+export * from "./element.js";
 export { view } from "./view.js";

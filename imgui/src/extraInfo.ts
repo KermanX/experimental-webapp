@@ -1,4 +1,4 @@
-import { Metadata } from "./dom";
+import { Metadata } from "./element";
 
 export interface ExtraInfo {
   id?: string;

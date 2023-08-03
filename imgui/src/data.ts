@@ -1,6 +1,8 @@
-import { MElement } from "./dom";
+import { MElement } from "./element";
 
 export const PDSymbol = Symbol("PD");
+
+type DWarppable = string | number | bigint | boolean | null | undefined;
 
 export class PD<T> {
   constructor(public value: T) {}
@@ -10,7 +12,7 @@ export class PD<T> {
   }
 }
 
-export function d<T>(v: T): Readonly<T> & PD<T> {
+export function d<T extends DWarppable>(v: T): Readonly<T> & PD<T> {
   return new PD(v) as any as Readonly<T> & PD<T>;
 }
 
@@ -28,7 +30,7 @@ export function setD<T>(d: D<T>, v: T): boolean {
   return false;
 }
 
-export function toRaw<T extends object>(d: D<T>): T {
+export function toRaw<T extends object>(d: T): T {
   for (const key in d) {
     d[key] = getD(d[key]);
   }

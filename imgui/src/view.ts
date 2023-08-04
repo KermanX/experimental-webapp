@@ -7,16 +7,22 @@ import {
   Elements,
   elements,
   MElementCtor,
+  ElementFuncs,
+  ElementCustomFuncs,
 } from "./element.js";
 // import { ExtraInfo } from "./extraInfo.js";
 
-export type Context = Elements;
+export type Context<
+  E extends keyof ElementCustomFuncs | keyof ElementFuncs =
+    | keyof ElementCustomFuncs
+    | keyof ElementFuncs,
+> = Elements<E>;
 
 export type ViewRender = (_: Context) => void;
 
 export const viewsSymbolMap = new Map<object, symbol>();
 
-export class View {
+export class View<T extends keyof Elements = keyof Elements> {
   constructor(
     public main: ViewRender,
     public rootElementId: string
@@ -25,10 +31,11 @@ export class View {
     Object.entries(elements).forEach(([name, func]) => {
       (this._ as any).$[name] = func.bind(this);
     });
-    this.root = new RootElement(this, rootElementId, {});
+    this.root = new RootElement(this, "~", {});
+    this.root.elId = rootElementId;
   }
 
-  status = new RenderingStatus(this);
+  status = new RenderingStatus<T>(this);
   _ = {} as Context;
   map: Map<string, MElement> = new Map();
   root: RootElement;
@@ -40,8 +47,8 @@ export class View {
     this.root.createDOM();
     this.update();
   }
-  recv(receiver: string, data: any) {
-    this.status.resetAs(State.recv, receiver);
+  recv(receiver: string, data: any = null) {
+    this.status.resetAs(State.recv, receiver, data);
     this.main(this._);
   }
   update() {
@@ -60,7 +67,6 @@ export class View {
     return ret;
   }
 
-
   protected getOrCreate<E extends MElement>(
     id: string,
     metadata: Metadata,
@@ -72,15 +78,15 @@ export class View {
       e = new elc(this, id, metadata);
       this.map.set(e.id, e);
     }
-    if (metadata.ref) {
+    if (metadata?.ref) {
       metadata.ref.current = e;
     }
     return e;
   }
 
   protected writeProps<E extends MElement>(el: E, props: Partial<E>) {
-    // el.extraInfo = this.extraInfo;
     for (const key in props) {
+      // @ts-ignore
       el[key] = props[key];
     }
   }
@@ -139,7 +145,7 @@ export enum State {
   recv, // 接收消息，不得改变DOM
 }
 
-export class RenderingStatus {
+export class RenderingStatus<T extends keyof Elements> {
   constructor(public view: View) {}
 
   currrentParent: MElementWithChildren;
@@ -149,7 +155,9 @@ export class RenderingStatus {
   protected idPrefix: string[];
   // extraInfo: ExtraInfo;
 
-  resetAs(state: State, receiver: string | null = null) {
+  resetAs(state: State.recv, receiver: string, data: any): void;
+  resetAs(state: State.update): void;
+  resetAs(state: State, receiver: string | null = null, data: any = null) {
     this.currentState = state;
     this.currrentParent = this.view.root;
     this.receiver = receiver;

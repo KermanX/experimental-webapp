@@ -45,13 +45,14 @@ const btn = ref<ButtonElement>();
 view((_) => {
   _.textInput("Username: ", name);
   _.numberInput("Age: ", age);
-  if (_.button<".primary-btn">("Register").as(btn)) {
+  if (_.button<".primary-btn">("Register") && _.as(btn)) {
     console.log("Register", name.value, age.value);
     table.push(toRaw({ name, age }));
     name.value = "";
     age.value = 0;
+    _.event;
   }
-  btn.current.disabled = !(name.value.length > 0 && age.value > 0);
+  btn.current!.disabled = !(name.value.length > 0 && age.value > 0);
   _.table<"{color:red}", (typeof table)[number]>(table, "name", (row) => {
     _.td(() => {
       _.t(row.name);

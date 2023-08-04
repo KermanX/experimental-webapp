@@ -9,8 +9,11 @@ import {
 import { ViewRender, View } from "../view.js";
 
 export class RootElement extends MElementWithChildren {
+  elId: string;
   createDOM() {
-    this.el = document.getElementById("root");
+    const el = document.getElementById(this.elId);
+    if (!el) throw new Error(`Root element not found with id ${this.elId}`);
+    this.el = el;
   }
   updateDOM() {
     this.updateChildrenDOM();
@@ -28,7 +31,7 @@ export class DivElement extends MElementWithChildren<HTMLDivElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    div: [DivElement, [inner: ViewRender]];
+    div: [DivElement, [inner: ViewRender], null];
   }
 }
 registerElement(function div(
@@ -56,7 +59,7 @@ export class ButtonElement extends MElement<HTMLButtonElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    button: [ButtonElement, [text: D<string>]];
+    button: [ButtonElement, [text: D<string>], MouseEvent];
   }
 }
 registerElement(function button(
@@ -78,7 +81,7 @@ export class ParagraphElement extends MElement<HTMLParagraphElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    p: [ParagraphElement, [text: D<string>]];
+    p: [ParagraphElement, [text: D<string>], null];
   }
 }
 registerElement(function p(id: string, metadata: Metadata, text: D<string>) {
@@ -96,8 +99,8 @@ export class SpanElement extends MElement<HTMLSpanElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    t: [SpanElement, [text: D<string>]];
-    span: [SpanElement, [text: D<string>]];
+    t: [SpanElement, [text: D<string>], null];
+    span: [SpanElement, [text: D<string>], null];
   }
 }
 registerElement(function t(id: string, metadata: Metadata, text: D<string>) {
@@ -119,6 +122,7 @@ export class NumberInputElement extends MElement<HTMLLabelElement> {
     this.el.style.display = "block";
     this.inputEl.type = "number";
     this.el.addEventListener("input", (e) => {
+      //@ts-ignore
       this.setD(this.value, +e.target["value"]);
     });
     this.el.appendChild(this.textNode);
@@ -131,7 +135,11 @@ export class NumberInputElement extends MElement<HTMLLabelElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    numberInput: [NumberInputElement, [label: D<string>, value: D<number>]];
+    numberInput: [
+      NumberInputElement,
+      [label: D<string>, value: D<number>],
+      null,
+    ];
   }
 }
 registerElement(function numberInput(
@@ -155,6 +163,7 @@ export class TextInputElement extends MElement<HTMLLabelElement> {
     this.el.style.display = "block";
     this.inputEl.type = "text";
     this.inputEl.addEventListener("input", (e) => {
+      //@ts-ignore
       this.setD(this.value, e.target["value"]);
     });
     this.el.appendChild(this.textNode);
@@ -167,7 +176,7 @@ export class TextInputElement extends MElement<HTMLLabelElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    textInput: [TextInputElement, [label: D<string>, value: D<string>]];
+    textInput: [TextInputElement, [label: D<string>, value: D<string>], null];
   }
 }
 registerElement(function textInput(
@@ -190,7 +199,7 @@ export class StyleElement extends MElement<HTMLStyleElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    style: [NumberInputElement, [source: D<string>]];
+    style: [NumberInputElement, [source: D<string>], null];
   }
 }
 registerElement(function style(
@@ -251,7 +260,7 @@ export class TableRowElement extends MElementWithChildren<HTMLTableRowElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    tr: [TableRowElement, [inner: ViewRender]];
+    tr: [TableRowElement, [inner: ViewRender], null];
   }
 }
 registerElement(function tr(id: string, metadata: Metadata, inner: ViewRender) {
@@ -269,7 +278,7 @@ export class TableCellElement extends MElementWithChildren<HTMLTableCellElement>
 }
 declare module "../element" {
   interface ElementFuncs {
-    td: [TableCellElement, [inner: ViewRender]];
+    td: [TableCellElement, [inner: ViewRender], null];
   }
 }
 registerElement(function td(id: string, metadata: Metadata, inner: ViewRender) {
@@ -296,8 +305,8 @@ export class ListItemElement extends MElementWithChildren<HTMLLIElement> {
 }
 declare module "../element" {
   interface ElementFuncs {
-    ul: [UnorderedListElement, [inner: ViewRender]];
-    li: [ListItemElement, [inner: ViewRender]];
+    ul: [UnorderedListElement, [inner: ViewRender], null];
+    li: [ListItemElement, [inner: ViewRender], null];
   }
   interface ElementCustomFuncs {
     ulist<Metadata extends string = "", Item = unknown>(

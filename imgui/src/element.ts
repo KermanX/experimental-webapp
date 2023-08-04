@@ -20,6 +20,7 @@ export abstract class MElement<E extends HTMLElement = HTMLElement> {
   }
 
   writeMetadataToDOM() {
+    if (!this.metadata) return;
     if (this.metadata.id) this.el.id = this.metadata.id;
     if (this.metadata.classes && this.metadata.classes!.length > 0)
       this.el.classList.add(...this.metadata.classes);
@@ -49,7 +50,7 @@ export abstract class MElementWithChildren<
   }
 
   updateChildrenDOM() {
-    let createdUnused = {};
+    let createdUnused: Record<string, boolean> = {};
     for (const id in this.createdChildren) {
       createdUnused[id] = true;
     }
@@ -82,27 +83,34 @@ export abstract class MElementWithChildren<
   }
 }
 
-export type Metadata = {
+export interface Metadata {
   id?: string | null;
-  classes?: string[];
+  classes?: string[] | null;
   style?: string | null;
   ref?: Ref<any> | null;
-} | null;
+}
 
-export type RetValue<R, T extends object> = R & {
-  as(ref: Ref<T>): R;
-};
+// export type RetValue<R, T extends object> = R & {
+//   as(ref: Ref<T>): R;
+// };
 
-export interface ElementFuncs extends Record<string, [object, any[]]> {}
+export interface ElementFuncs extends Record<string, [object, any[], any]> {}
 
 export interface ElementCustomFuncs {}
 
-const a: number | string = 1;
-
-export type Elements = ElementCustomFuncs & {
-  [K in keyof ElementFuncs]: <Metadata extends string = "">(
+export type Elements<
+  E extends keyof ElementCustomFuncs | keyof ElementFuncs =
+    | keyof ElementCustomFuncs
+    | keyof ElementFuncs,
+> = ElementCustomFuncs & {
+  [K in keyof ElementFuncs]: <M extends string | Metadata = "">(
     ...args: ElementFuncs[K][1]
-  ) => RetValue<boolean, ElementFuncs[K][0]>;
+    //@ts-ignore
+  ) => this is Elements<K>;
+} & {
+  event: ElementFuncs[E][2];
+  // @ts-ignore
+  as(ref: Ref<ElementFuncs[E][0]>): this is Elements<E>;
 };
 
 export const elements: Elements = {} as any;

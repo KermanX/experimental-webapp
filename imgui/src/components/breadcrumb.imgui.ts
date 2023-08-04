@@ -8,7 +8,7 @@ export class BreadCrumbComponent {
 
 declare module "../element" {
   interface ElementFuncs {
-    breadcrumb: [BreadCrumbComponent, [items: D<BreadCrumbItem[]>]];
+    breadcrumb: [BreadCrumbComponent, [items: D<BreadCrumbItem[]>], never];
   }
 }
 registerElement(function breadcrumb(
@@ -18,7 +18,7 @@ registerElement(function breadcrumb(
 ) {
   let itemsValue = getD(items);
   this.status.beginChild(id);
-  this._.ul<"$metadata">(() => {
+  this._.ul<typeof metadata>(() => {
     this._.for(itemsValue.slice(0, -1), byIndex, (item) => {
       this._.li<"{display:inline;list-style:none;}">(() => {
         this._.span(item);
@@ -26,7 +26,7 @@ registerElement(function breadcrumb(
       });
     });
     this._.li<"{display:inline;list-style:none;}">(() => {
-      this._.span(itemsValue.at(-1));
+      this._.span(itemsValue.at(-1)!);
     });
   });
   this.status.endChild();

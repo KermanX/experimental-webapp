@@ -31,7 +31,7 @@ registerElement(function <T>(
   key: keyof T | ((item: T, index: number) => D<string>),
   body: (item: T, index: number) => void
 ) {
-  let k;
+  let k: any;
   if (typeof key === "string") {
     k = (item: T) => item[key];
   } else {
@@ -55,7 +55,7 @@ registerElement(function forRange(
 ) {
   times = getD(times);
   for (let i = 0; i < times; i++) {
-    this.status.beginChild(id,i);
+    this.status.beginChild(id, i);
     body(i);
     this.status.endChild();
   }

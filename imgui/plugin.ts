@@ -12,25 +12,33 @@ export default function myExample() {
       }
       const s = new MagicString(code);
       s.replaceAll(
-        /_\s*\.\s*([a-zA-Z0-9_]+)\s*<\s*\"([\s\S]*?)\",?([\s\S]*?)>\s*\(([\s\S]*?)\)(\s*\.as\s*\(([\s\S]+?)\))?/g,
-        (_, name, selector, typeargs, args, _2, ref = null) => {
+        /_\s*\.\s*([a-zA-Z0-9_]+)\s*<([\s\S^,]*?)>\s*\(([\s\S]*?)\)(\s*\.as\s*\(([\s\S]+?)\))?/gm,
+        (_, name, s: string, args, _2, ref = null) => {
+          s = s.trim();
+          let metadata = "{}";
+          if (s.startsWith("typeof ")) {
+            metadata = s.match(/typeof\s+([a-zA-Z0-9_]+)/)![0];
+            if (ref !== null) {
+              throw new Error(
+                "cannot ref an element while applying existed metadata"
+              );
+            }
+          } else {
+            metadata = generateMetadata(s.match(/"([\s\S]+)"/)![0], ref);
+          }
           ctx.id++;
-          return `_.$.${name}${
-            typeargs.length > 0 ? `<${typeargs}>` : ""
-          }("${ctx.id.toString(36).toUpperCase()}", ${generateMetadata(
-            selector,
-            ref
-          )}, ${args})`;
+          return `_.$.${name}("${ctx.id
+            .toString(36)
+            .toUpperCase()}", ${metadata}, ${args})`;
         }
       );
       s.replaceAll(
         /_\s*\.\s*([a-zA-Z0-9_]+)\s*\(\s*([\s\S]*?)\s*\)(\s*\.as\s*\(([\s\S]+?)\))?/g,
         (_, name, args, _2, ref = null) => {
           ctx.id++;
-          return `_.$.${name}("${ctx.id.toString(36).toUpperCase()}", ${generateMetadata(
-            "",
-            ref
-          )}, ${args})`;
+          return `_.$.${name}("${ctx.id
+            .toString(36)
+            .toUpperCase()}", ${generateMetadata("", ref)}, ${args})`;
         }
       );
       const map = s.generateMap({
@@ -90,11 +98,8 @@ function parseSelector(selector: string) {
   return { id, classes, style };
 }
 
-function generateMetadata(selector: string, ref: string | null) {
-  if (selector.startsWith("$")) {
-    return selector.slice(1);
-  }
-  const { id, classes, style } = parseSelector(selector);
+function generateMetadata(metadata: string, ref: string | null) {
+  const { id, classes, style } = parseSelector(metadata.slice(1, -1));
   return `{${id ? `id:"${id}",` : ""}${
     classes.length > 0
       ? `classes:[${classes.map((c) => `"${c}"`).join(",")}],`

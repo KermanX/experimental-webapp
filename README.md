@@ -2,6 +2,10 @@
 
 Experimental webapp framework.
 
+# [Archieved]
+
+**Please go to [Refina.js](https://github.com/refinajs/)**
+
 ## Features
 
 - 合并的前后端逻辑
